@@ -32,7 +32,7 @@ class FrameExtractionThread (threading.Thread):
     def run(self):
         try:
             self.mVideo.PrintVideoName()
-            systemCallCMD = "ffmpeg -i " + self.mVideo.GetVideoNameFull() + " -vf fps=1/600 " + self.mVideo.GetVideoNameWOSuffix() + "%03d.png"
+            systemCallCMD = "ffmpeg -i " + self.mVideo.GetVideoNameFull() + " -vf fps=1/600 " + self.mVideo.GetVideoNameWOSuffix() + "/" + self.mVideo.GetVideoNameWOSuffix() + "%03d.png"
             subprocess.check_output(systemCallCMD, stderr=subprocess.STDOUT, shell=True)
         except subprocess.CalledProcessError as ex:
             print ex.output
