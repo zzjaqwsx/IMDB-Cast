@@ -10,16 +10,20 @@ eye_cascade = cv2.CascadeClassifier(lib_relative_path + 'haarcascade_eye.xml')
 
 #face_cascade = cv2.CascadeClassifier('cv2.haarcascade_frontalface_default.xml')
 #img = cv2.imread('xfiles4.jpg')
-img = cv2.imread('/home/freeman/Desktop/Shared/nationaltrasure1003.png')
+
+img = cv2.imread('/home/freeman/Desktop/Shared/frame_extraction_ws/premature/premature004.png')
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 faces = face_cascade.detectMultiScale(gray, 1.2, 5)
 print(len(faces))
 
 for (x,y,w,h) in faces:
+    h = h + 50
+    w = w + 10
     cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
     roi_gray = gray[y:y+h, x:x+w]
     roi_color = img[y:y+h, x:x+w]
+    cv2.imwrite("roi.png", roi_color)
     eyes = eye_cascade.detectMultiScale(roi_gray)
     for (ex,ey,ew,eh) in eyes:
         cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
