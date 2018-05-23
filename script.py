@@ -7,7 +7,7 @@ import os
 import numpy as np
 import cv2
 
-#print(os.listdir("."))
+#global directory path
 EXTRACTED_FRAME_DIR = "./frame_extraction_ws"
 EXTRACTED_FACE_DIR  = "./face_extraction_ws"
 lib_relative_path = 'extlib/haarcascades/'
@@ -15,6 +15,7 @@ MOVIES_DIR = "./movies"
 videoSuffix = ["mp4", "mkv"]
 frameExtractionThreadPool = []
 face_cascade = cv2.CascadeClassifier(lib_relative_path + 'haarcascade_frontalface_default.xml')
+#Video class to store necessary information for each video object
 class Video:
     
     def __init__ (self, fileName):
@@ -32,7 +33,8 @@ class Video:
         
     def GetVideoNameWOSuffix(self):
         return self.mVideoNameWOSuffix
-        
+
+#Thread class definition to be instantiated later for multi-threaded approach
 class FrameExtractionThread (threading.Thread):
     def __init__ (self, video):
         threading.Thread.__init__(self)
@@ -44,7 +46,8 @@ class FrameExtractionThread (threading.Thread):
             self.mVideo.PrintVideoName()
             if (not os.path.isdir(EXTRACTED_FRAME_DIR + "/" + self.mVideo.GetVideoNameWOSuffix())):
                 subprocess.call("mkdir " + EXTRACTED_FRAME_DIR + "/" + self.mVideo.GetVideoNameWOSuffix(), shell = True)
-            systemCallCMD = "ffmpeg -i " + MOVIES_DIR + "/" + self.mVideo.GetVideoNameFull() + " -vf fps=1 " + EXTRACTED_FRAME_DIR + "/" + self.mVideo.GetVideoNameWOSuffix() + "/" + self.mVideo.GetVideoNameWOSuffix() + "%010d.png"
+            #system call to ffmpeg to extract frame to destination directory
+			systemCallCMD = "ffmpeg -i " + MOVIES_DIR + "/" + self.mVideo.GetVideoNameFull() + " -vf fps=1 " + EXTRACTED_FRAME_DIR + "/" + self.mVideo.GetVideoNameWOSuffix() + "/" + self.mVideo.GetVideoNameWOSuffix() + "%010d.png"
             subprocess.check_output(systemCallCMD, stderr=subprocess.STDOUT, shell=True)
         except subprocess.CalledProcessError as ex:
             print(ex.output)
@@ -56,18 +59,22 @@ class FaceDetectionThread (threading.Thread):
         
     def run(self):
         try:
+		    #instantiate cascadeclassifier for each thread
             face_cascade = cv2.CascadeClassifier(lib_relative_path + 'haarcascade_frontalface_default.xml')
             self.mVideo.PrintVideoName()
             print(EXTRACTED_FACE_DIR + "/" + self.mVideo.GetVideoNameWOSuffix())
+			#check if directory already exits, create if not
             if (not os.path.isdir(EXTRACTED_FACE_DIR + "/" + self.mVideo.GetVideoNameWOSuffix())):
                 subprocess.call("mkdir " + EXTRACTED_FACE_DIR + "/" + self.mVideo.GetVideoNameWOSuffix(), shell = True)
-                
+            #for each extracted frame, detect faces from that frame
             for frame in os.listdir(EXTRACTED_FRAME_DIR + "/" + self.mVideo.GetVideoNameWOSuffix()):
                 framename = frame.split(".")[0]
                 img = cv2.imread(EXTRACTED_FRAME_DIR + "/" + self.mVideo.GetVideoNameWOSuffix() + "/" + frame)
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+				#scale factor 5
                 faces = face_cascade.detectMultiScale(gray, 1.2, 5)
-
+                
+				#write region of interest to destination directory
                 for (x,y,w,h) in faces:
                     h = h + 50
                     w = w + 50
